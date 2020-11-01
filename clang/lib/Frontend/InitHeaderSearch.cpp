@@ -280,6 +280,11 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
     AddPath(P, System, false);
     break;
   }
+  
+  case llvm::Triple::Lemon: {
+    AddPath("/system/include", System, false);
+    break;
+  }
 
   case llvm::Triple::Haiku:
     AddPath("/boot/system/non-packaged/develop/headers", System, false);
