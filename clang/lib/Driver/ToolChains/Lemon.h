@@ -47,6 +47,12 @@ public:
     
     bool HasNativeLLVMSupport() const override { return true; }
     
+    void addLibCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
+                            llvm::opt::ArgStringList &CC1Args) const override;
+                            
+    ToolChain::CXXStdlibType GetDefaultCXXStdlibType() const override { return ToolChain::CST_Libcxx; }
+    void AddCXXStdlibLibArgs(const llvm::opt::ArgList &Args,
+                                  llvm::opt::ArgStringList &CmdArgs) const override;
 protected:
     Tool *buildAssembler() const override;
     Tool *buildLinker() const override;

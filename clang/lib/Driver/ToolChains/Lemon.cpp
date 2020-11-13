@@ -16,7 +16,23 @@ using namespace llvm::opt;
 
 Lemon::Lemon(const Driver &D, const llvm::Triple &Triple, const llvm::opt::ArgList &Args)
     : Generic_ELF(D, Triple, Args){
-    
+    getFilePaths().push_back(getDriver().SysRoot + "/system/lib");
+}
+
+void Lemon::addLibCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
+                            llvm::opt::ArgStringList &CC1Args) const {
+    addSystemInclude(DriverArgs, CC1Args, getDriver().SysRoot + "/system/include/c++/v1");
+}
+
+void Lemon::AddCXXStdlibLibArgs(const llvm::opt::ArgList &Args,
+                                  llvm::opt::ArgStringList &CmdArgs) const {
+    CXXStdlibType Type = GetCXXStdlibType(Args);
+
+    switch (Type) {
+    case ToolChain::CST_Libcxx:
+        CmdArgs.push_back("-lc++");
+        break;
+    }
 }
 
 Tool *Lemon::buildAssembler() const {
@@ -66,6 +82,17 @@ void lemon::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     // handled somewhere else.
     Args.ClaimAllArgs(options::OPT_w);
     
+    if (Args.hasArg(options::OPT_static)) {
+    CmdArgs.push_back("-Bstatic");
+    } else {
+        if (Args.hasArg(options::OPT_rdynamic))
+            CmdArgs.push_back("-export-dynamic");
+            CmdArgs.push_back("-Bdynamic");
+        if (Args.hasArg(options::OPT_shared)) {
+            CmdArgs.push_back("-shared");
+        }
+    }
+    
     if (!D.SysRoot.empty())
         CmdArgs.push_back(Args.MakeArgString("--sysroot=" + D.SysRoot));
 
@@ -83,13 +110,19 @@ void lemon::Linker::ConstructJob(Compilation &C, const JobAction &JA,
         if(!Args.hasArg(options::OPT_shared)){
             CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crt0.o")));
         }
-        
-        if(Args.hasArg(options::OPT_shared) || IsPIE){
-            CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtbeginS.o")));
+        std::string crtbegin = ToolChain.getCompilerRT(Args, "crtbegin",
+                                                       ToolChain::FT_Object);
+        if (ToolChain.getVFS().exists(crtbegin)){
+            CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath(crtbegin.c_str())));
         } else {
-            CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtbegin.o")));
+            if(Args.hasArg(options::OPT_shared) || IsPIE){
+                CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtbeginS.o")));
+            } else {
+                CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtbegin.o")));
+            }
         }
-        CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crti.o")));
+            
+        //CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crti.o")));
     }
     
     Args.AddAllArgs(CmdArgs, options::OPT_L);
@@ -107,36 +140,36 @@ void lemon::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                     D.getLTOMode() == LTOK_Thin);
     }
 
-    bool NeedsSanitizerDeps = addSanitizerRuntimes(ToolChain, Args, CmdArgs);
-    bool NeedsXRayDeps = addXRayRuntime(ToolChain, Args, CmdArgs);
     AddLinkerInputs(ToolChain, Inputs, Args, CmdArgs, JA);
     
     if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
         if (D.CCCIsCXX()) {
             if (ToolChain.ShouldLinkCXXStdlib(Args))
                 ToolChain.AddCXXStdlibLibArgs(Args, CmdArgs);
-            CmdArgs.push_back("-lm");
         }
-        
-        if (NeedsSanitizerDeps)
-            linkSanitizerRuntimeDeps(ToolChain, CmdArgs);
-        if (NeedsXRayDeps)
-            linkXRayRuntimeDeps(ToolChain, CmdArgs);
         
         if (Args.hasArg(options::OPT_pthread)) {
             CmdArgs.push_back("-lpthread");
         }
+        
+        CmdArgs.push_back("-lc");
     }
 
     if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nostartfiles)) {
-        if (Args.hasArg(options::OPT_shared) || IsPIE)
-        CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtendS.o")));
-        else
-        CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtend.o")));
-        CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtn.o")));
+        std::string crtend = ToolChain.getCompilerRT(Args, "crtend",
+                                                       ToolChain::FT_Object);
+        if (ToolChain.getVFS().exists(crtend)){
+            CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath(crtend.c_str())));
+        } else {
+            if(Args.hasArg(options::OPT_shared) || IsPIE){
+                CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtendS.o")));
+            } else {
+                CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtend.o")));
+            }
+        }
+        
+        //CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtn.o")));
     }
-
-    ToolChain.addProfileRTLibs(Args, CmdArgs);
 
     const char *Exec = Args.MakeArgString(getToolChain().GetLinkerPath());
     C.addCommand(std::make_unique<Command>(JA, *this, ResponseFileSupport::AtFileCurCP(), Exec, CmdArgs, Inputs));

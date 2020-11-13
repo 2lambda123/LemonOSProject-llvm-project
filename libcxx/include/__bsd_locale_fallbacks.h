@@ -21,6 +21,15 @@
 #pragma GCC system_header
 #endif
 
+#ifdef __lemon__
+#define strftime_l(a, b, c, d, e) strftime(a,b,c,d)
+#define wcsxfrm_l(a,b,c,d) wcsxfrm(a,b,c)
+#define strxfrm_l(a,b,c,d) strxfrm(a,b,c)
+#define strtoll_l(a,b,c,d) strtoll(a,b,c)
+#define strtoull_l(a,b,c,d) strtoull(a,b,c)
+#define wcscoll_l(a,b,c) wcscoll(a,b)
+#endif
+
 _LIBCPP_BEGIN_NAMESPACE_STD
 
 inline _LIBCPP_INLINE_VISIBILITY

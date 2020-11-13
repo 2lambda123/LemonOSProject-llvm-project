@@ -325,9 +325,9 @@ class LLVM_LIBRARY_VISIBILITY LemonTargetInfo : public OSTargetInfo<Target> {
 protected:
   void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
                     MacroBuilder &Builder) const override {
+    DefineStd(Builder, "unix", Opts);
     Builder.defineMacro("__lemon__");
     Builder.defineMacro("__ELF__");
-    DefineStd(Builder, "unix", Opts);
     if (this->HasFloat128) 
       Builder.defineMacro("__FLOAT128__");
   }
