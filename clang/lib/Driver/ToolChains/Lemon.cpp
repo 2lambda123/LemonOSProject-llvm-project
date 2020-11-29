@@ -106,7 +106,7 @@ void lemon::Linker::ConstructJob(Compilation &C, const JobAction &JA,
         assert(Output.isNothing() && "Invalid output.");
     }
   
-    if(!Args.hasArg(options::OPT_nostdlib) && !Args.hasArg(options::OPT_nostartfiles)){
+    if(!Args.hasArg(options::OPT_nostdlib, options::OPT_nostartfiles)){
         if(!Args.hasArg(options::OPT_shared)){
             CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crt0.o")));
         }
@@ -114,15 +114,7 @@ void lemon::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                                        ToolChain::FT_Object);
         if (ToolChain.getVFS().exists(crtbegin)){
             CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath(crtbegin.c_str())));
-        } else {
-            if(Args.hasArg(options::OPT_shared) || IsPIE){
-                CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtbeginS.o")));
-            } else {
-                CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtbegin.o")));
-            }
         }
-            
-        //CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crti.o")));
     }
     
     Args.AddAllArgs(CmdArgs, options::OPT_L);
@@ -160,15 +152,7 @@ void lemon::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                                        ToolChain::FT_Object);
         if (ToolChain.getVFS().exists(crtend)){
             CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath(crtend.c_str())));
-        } else {
-            if(Args.hasArg(options::OPT_shared) || IsPIE){
-                CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtendS.o")));
-            } else {
-                CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtend.o")));
-            }
         }
-        
-        //CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath("crtn.o")));
     }
 
     const char *Exec = Args.MakeArgString(getToolChain().GetLinkerPath());
