@@ -83,11 +83,10 @@ void lemon::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     Args.ClaimAllArgs(options::OPT_w);
     
     if (Args.hasArg(options::OPT_static)) {
-    CmdArgs.push_back("-Bstatic");
+        CmdArgs.push_back("-Bstatic");
     } else {
         if (Args.hasArg(options::OPT_rdynamic))
             CmdArgs.push_back("-export-dynamic");
-            CmdArgs.push_back("-Bdynamic");
         if (Args.hasArg(options::OPT_shared)) {
             CmdArgs.push_back("-shared");
         }
