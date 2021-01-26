@@ -26,6 +26,11 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/StringSaver.h"
 #include "llvm/Support/raw_ostream.h"
+
+#ifdef __lemon__
+#include <lemon/system/spawn.h>
+#endif
+
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
@@ -193,6 +198,29 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
     EnvVector = toNullTerminatedCStringArray(*Env, Saver);
     Envp = EnvVector.data();
   }
+
+#ifdef __lemon__
+  if (!Redirects.empty()) {
+    // Redirect stdin
+    if (RedirectIO(Redirects[0], 0, ErrMsg)) { return false; }
+    // Redirect stdout
+    if (RedirectIO(Redirects[1], 1, ErrMsg)) { return false; }
+    if (Redirects[1] && Redirects[2] && *Redirects[1] == *Redirects[2]) {
+      // If stdout and stderr should go to the same place, redirect stderr
+      // to the FD already open for stdout.
+      if (-1 == dup2(1,2)) {
+        MakeErrMsg(ErrMsg, "Can't redirect stderr to stdout");
+        return false;
+      }
+    } else {
+      // Just redirect stderr
+      if (RedirectIO(Redirects[2], 2, ErrMsg)) { return false; }
+    }
+  }
+
+  return (lemon_spawn(std::string(Program).c_str(), ArgVector.size(), const_cast<char **>(Argv),
+    EXEC_CHILD, const_cast<char **>(Envp)) > 0);
+#endif
 
   // If this OS has posix_spawn and there is no memory limit being implied, use
   // posix_spawn.  It is more efficient than fork/exec.

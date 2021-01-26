@@ -447,7 +447,7 @@ std::error_code remove(const Twine &path, bool IgnoreNonExisting) {
 }
 
 static bool is_local_impl(struct STATVFS &Vfs) {
-#if defined(__linux__) || defined(__GNU__)
+#if (defined(__linux__) || defined(__GNU__)) && !defined(__lemon__)
 #ifndef NFS_SUPER_MAGIC
 #define NFS_SUPER_MAGIC 0x6969
 #endif
@@ -480,6 +480,9 @@ static bool is_local_impl(struct STATVFS &Vfs) {
   return true;
 #elif defined(__HAIKU__)
   // Haiku doesn't expose this information.
+  return false;
+#elif defined(__lemon__)
+  // Doesn't expose this information.
   return false;
 #elif defined(__sun)
   // statvfs::f_basetype contains a null-terminated FSType name of the mounted target
