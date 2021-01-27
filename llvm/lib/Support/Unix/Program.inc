@@ -28,7 +28,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 #ifdef __lemon__
-#include <lemon/system/spawn.h>
+#include <lemon/syscall.h>
 #endif
 
 #if HAVE_SYS_STAT_H
@@ -218,8 +218,8 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
     }
   }
 
-  return (lemon_spawn(std::string(Program).c_str(), ArgVector.size(), const_cast<char **>(Argv),
-    EXEC_CHILD, const_cast<char **>(Envp)) > 0);
+  return (syscall(SYS_EXEC, std::string(Program).c_str(), ArgVector.size(), const_cast<char **>(Argv),
+    1, const_cast<char **>(Envp)) > 0);
 #endif
 
   // If this OS has posix_spawn and there is no memory limit being implied, use
@@ -421,7 +421,9 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
     sigemptyset(&Act.sa_mask);
     sigaction(SIGALRM, &Act, &Old);
     // FIXME The alarm signal may be delivered to another thread.
-    alarm(SecondsToWait);
+    #ifndef __lemon__
+      alarm(SecondsToWait);
+    #endif
   } else if (SecondsToWait == 0)
     WaitPidOptions = WNOHANG;
 
@@ -446,8 +448,10 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
         kill(PI.Pid, SIGKILL);
 
         // Turn off the alarm and restore the signal handler
-        alarm(0);
-        sigaction(SIGALRM, &Old, nullptr);
+        #ifndef __lemon__
+          alarm(0);
+          sigaction(SIGALRM, &Old, nullptr);
+        #endif
 
         // Wait for child to die
         // FIXME This could grab some other child process out from another
@@ -469,8 +473,10 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
 
   // We exited normally without timeout, so turn off the timer.
   if (SecondsToWait && !WaitUntilTerminates) {
-    alarm(0);
-    sigaction(SIGALRM, &Old, nullptr);
+    #ifndef __lemon__
+      alarm(0);
+      sigaction(SIGALRM, &Old, nullptr);
+    #endif
   }
 
   if (ProcStat) {
