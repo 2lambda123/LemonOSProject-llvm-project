@@ -218,8 +218,17 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
     }
   }
 
-  return (syscall(SYS_EXEC, std::string(Program).c_str(), ArgVector.size(), const_cast<char **>(Argv),
-    1, const_cast<char **>(Envp)) > 0);
+  pid_t pid = (syscall(SYS_EXEC, std::string(Program).c_str(), ArgVector.size(), const_cast<char **>(Argv),
+    1, const_cast<char **>(Envp)));
+    
+  if(pid < 0){
+    return false;
+  }
+  
+  PI.Pid = pid;
+  PI.Process = pid;
+  
+  return true;
 #endif
 
   // If this OS has posix_spawn and there is no memory limit being implied, use
