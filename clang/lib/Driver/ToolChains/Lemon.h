@@ -53,6 +53,8 @@ public:
     ToolChain::CXXStdlibType GetDefaultCXXStdlibType() const override { return ToolChain::CST_Libcxx; }
     void AddCXXStdlibLibArgs(const llvm::opt::ArgList &Args,
                                   llvm::opt::ArgStringList &CmdArgs) const override;
+
+    ToolChain::RuntimeLibType GetRuntimeLibType(const llvm::opt::ArgList &Args) const override { return ToolChain::RLT_CompilerRT; }
 protected:
     Tool *buildAssembler() const override;
     Tool *buildLinker() const override;

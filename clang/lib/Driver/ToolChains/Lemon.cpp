@@ -115,7 +115,7 @@ void lemon::Linker::ConstructJob(Compilation &C, const JobAction &JA,
             CmdArgs.push_back(Args.MakeArgString(ToolChain.GetFilePath(crtbegin.c_str())));
         }
     }
-    
+
     Args.AddAllArgs(CmdArgs, options::OPT_L);
     ToolChain.AddFilePathLibArgs(Args, CmdArgs);
     Args.AddAllArgs(CmdArgs, options::OPT_T_Group);
@@ -134,6 +134,11 @@ void lemon::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     AddLinkerInputs(ToolChain, Inputs, Args, CmdArgs, JA);
     
     if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
+        CmdArgs.push_back("--whole-archive");
+        CmdArgs.push_back(ToolChain.getCompilerRTArgString(Args, "builtins"));
+        CmdArgs.push_back("--no-whole-archive");
+        CmdArgs.push_back("-lunwind");
+
         if (D.CCCIsCXX()) {
             if (ToolChain.ShouldLinkCXXStdlib(Args))
                 ToolChain.AddCXXStdlibLibArgs(Args, CmdArgs);
