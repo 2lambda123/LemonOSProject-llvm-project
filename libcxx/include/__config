@@ -365,6 +365,9 @@
 #    define _LIBCPP_HAS_QUICK_EXIT
 #    define _LIBCPP_HAS_TIMESPEC_GET
 #    define _LIBCPP_HAS_C11_FEATURES
+#  elif defined(__lemon__)
+#    define _LIBCPP_HAS_ALIGNED_ALLOC
+#    define _LIBCPP_HAS_C11_FEATURES
 #  elif defined(__linux__)
 #    if !defined(_LIBCPP_HAS_MUSL_LIBC)
 #      if _LIBCPP_GLIBC_PREREQ(2, 15) || defined(__BIONIC__)
@@ -921,7 +924,7 @@ typedef unsigned int   char32_t;
 
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 // Most unix variants have catopen.  These are the specific ones that don't.
-#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION)
+#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__lemon__)
 #    define _LIBCPP_HAS_CATOPEN 1
 #  endif
 #endif
@@ -1130,6 +1133,7 @@ _LIBCPP_FUNC_VIS extern "C" void __sanitizer_annotate_contiguous_container(
       defined(__APPLE__) || \
       defined(__CloudABI__) || \
       defined(__sun__) || \
+      defined(__lemon__) || \
       (defined(__MINGW32__) && __has_include(<pthread.h>))
 #    define _LIBCPP_HAS_THREAD_API_PTHREAD
 #  elif defined(__Fuchsia__)
@@ -1228,7 +1232,7 @@ _LIBCPP_FUNC_VIS extern "C" void __sanitizer_annotate_contiguous_container(
 #endif
 
 #if defined(__BIONIC__) || defined(__CloudABI__) ||                            \
-    defined(__Fuchsia__) || defined(__wasi__) || defined(_LIBCPP_HAS_MUSL_LIBC)
+    defined(__Fuchsia__) || defined(__wasi__) || defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__lemon__)
 #define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
 #endif
 

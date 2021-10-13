@@ -2475,7 +2475,7 @@ def MatrixType : TypeAttr {
 
 def Visibility : InheritableAttr {
   let Clone = 0;
-  let Spellings = [GCC<"visibility">];
+  let Spellings = [GNU<"visibility">, CXX11<"gnu", "visibility">];
   let Args = [EnumArgument<"Visibility", "VisibilityType",
                            ["default", "hidden", "internal", "protected"],
                            ["Default", "Hidden", "Hidden", "Protected"]>];

@@ -73,7 +73,7 @@ static void LLVMErrorHandler(void *UserData, const std::string &Message,
   llvm::sys::Process::Exit(GenCrashDiag ? 70 : 1);
 }
 
-#ifdef CLANG_HAVE_RLIMITS
+#if defined(CLANG_HAVE_RLIMITS) && !defined(__lemon__)
 #if defined(__linux__) && defined(__PIE__)
 static size_t getCurrentStackAllocation() {
   // If we can't compute the current stack usage, allow for 512K of command

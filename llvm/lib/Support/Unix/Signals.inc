@@ -47,6 +47,11 @@
 #include <algorithm>
 #include <string>
 #include <sysexits.h>
+
+#ifdef __lemon__
+#undef HAVE_BACKTRACE
+#endif
+
 #ifdef HAVE_BACKTRACE
 # include BACKTRACE_HEADER         // For backtrace().
 #endif
@@ -249,7 +254,7 @@ static struct {
   int SigNo;
 } RegisteredSignalInfo[NumSigs];
 
-#if defined(HAVE_SIGALTSTACK)
+#if defined(HAVE_SIGALTSTACK) && !defined(__lemon__)
 // Hold onto both the old and new alternate signal stack so that it's not
 // reported as a leak. We don't make any attempt to remove our alt signal
 // stack if we remove our signal handlers; that can't be done reliably if

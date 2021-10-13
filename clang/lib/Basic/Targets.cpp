@@ -561,6 +561,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
     }
     case llvm::Triple::Haiku:
       return new HaikuTargetInfo<X86_64TargetInfo>(Triple, Opts);
+    case llvm::Triple::Lemon:
+      return new LemonTargetInfo<X86_64TargetInfo>(Triple, Opts);
     case llvm::Triple::NaCl:
       return new NaClTargetInfo<X86_64TargetInfo>(Triple, Opts);
     case llvm::Triple::PS4:

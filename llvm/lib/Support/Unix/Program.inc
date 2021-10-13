@@ -26,6 +26,11 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/StringSaver.h"
 #include "llvm/Support/raw_ostream.h"
+
+#ifdef __lemon__
+#include <lemon/syscall.h>
+#endif
+
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
@@ -193,6 +198,38 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
     EnvVector = toNullTerminatedCStringArray(*Env, Saver);
     Envp = EnvVector.data();
   }
+
+#ifdef __lemon__
+  if (!Redirects.empty()) {
+    // Redirect stdin
+    if (RedirectIO(Redirects[0], 0, ErrMsg)) { return false; }
+    // Redirect stdout
+    if (RedirectIO(Redirects[1], 1, ErrMsg)) { return false; }
+    if (Redirects[1] && Redirects[2] && *Redirects[1] == *Redirects[2]) {
+      // If stdout and stderr should go to the same place, redirect stderr
+      // to the FD already open for stdout.
+      if (-1 == dup2(1,2)) {
+        MakeErrMsg(ErrMsg, "Can't redirect stderr to stdout");
+        return false;
+      }
+    } else {
+      // Just redirect stderr
+      if (RedirectIO(Redirects[2], 2, ErrMsg)) { return false; }
+    }
+  }
+
+  pid_t pid = (syscall(SYS_EXEC, std::string(Program).c_str(), ArgVector.size(), const_cast<char **>(Argv),
+    1, const_cast<char **>(Envp)));
+    
+  if(pid < 0){
+    return false;
+  }
+  
+  PI.Pid = pid;
+  PI.Process = pid;
+  
+  return true;
+#endif
 
   // If this OS has posix_spawn and there is no memory limit being implied, use
   // posix_spawn.  It is more efficient than fork/exec.
@@ -393,7 +430,9 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
     sigemptyset(&Act.sa_mask);
     sigaction(SIGALRM, &Act, &Old);
     // FIXME The alarm signal may be delivered to another thread.
-    alarm(SecondsToWait);
+    #ifndef __lemon__
+      alarm(SecondsToWait);
+    #endif
   } else if (SecondsToWait == 0)
     WaitPidOptions = WNOHANG;
 
@@ -418,8 +457,10 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
         kill(PI.Pid, SIGKILL);
 
         // Turn off the alarm and restore the signal handler
-        alarm(0);
-        sigaction(SIGALRM, &Old, nullptr);
+        #ifndef __lemon__
+          alarm(0);
+          sigaction(SIGALRM, &Old, nullptr);
+        #endif
 
         // Wait for child to die
         // FIXME This could grab some other child process out from another
@@ -441,8 +482,10 @@ ProcessInfo llvm::sys::Wait(const ProcessInfo &PI, unsigned SecondsToWait,
 
   // We exited normally without timeout, so turn off the timer.
   if (SecondsToWait && !WaitUntilTerminates) {
-    alarm(0);
-    sigaction(SIGALRM, &Old, nullptr);
+    #ifndef __lemon__
+      alarm(0);
+      sigaction(SIGALRM, &Old, nullptr);
+    #endif
   }
 
   if (ProcStat) {
