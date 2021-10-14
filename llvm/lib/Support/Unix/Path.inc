@@ -49,6 +49,8 @@ extern char **environ;
 #endif
 #elif defined(__DragonFly__)
 #include <sys/mount.h>
+#elif defined(__lemon__)
+#include <sys/auxv.h>
 #elif defined(__MVS__)
 #include "llvm/Support/AutoConvert.h"
 #include <sys/ps.h>
@@ -125,7 +127,8 @@ const file_t kInvalidFile = -1;
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) ||     \
     defined(__minix) || defined(__FreeBSD_kernel__) || defined(__linux__) ||   \
-    defined(__CYGWIN__) || defined(__DragonFly__) || defined(_AIX) || defined(__GNU__)
+    defined(__CYGWIN__) || defined(__DragonFly__) || defined(_AIX) || defined(__GNU__) || \
+    defined(__lemon__)
 static int
 test_dir(char ret[PATH_MAX], const char *dir, const char *bin)
 {
@@ -202,7 +205,7 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
     if (realpath(exe_path, link_path))
       return link_path;
   }
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__lemon__)
   // On FreeBSD if the exec path specified in ELF auxiliary vectors is
   // preferred, if available.  /proc/curproc/file and the KERN_PROC_PATHNAME
   // sysctl may not return the desired path if there are multiple hardlinks

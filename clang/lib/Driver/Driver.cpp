@@ -28,6 +28,7 @@
 #include "ToolChains/Hexagon.h"
 #include "ToolChains/Hurd.h"
 #include "ToolChains/Lanai.h"
+#include "ToolChains/Lemon.h"
 #include "ToolChains/Linux.h"
 #include "ToolChains/MSP430.h"
 #include "ToolChains/MSVC.h"
@@ -5252,6 +5253,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
       break;
     case llvm::Triple::CloudABI:
       TC = std::make_unique<toolchains::CloudABI>(*this, Target, Args);
+      break;
+    case llvm::Triple::Lemon:
+      TC = std::make_unique<toolchains::Lemon>(*this, Target, Args);
       break;
     case llvm::Triple::Darwin:
     case llvm::Triple::MacOSX:

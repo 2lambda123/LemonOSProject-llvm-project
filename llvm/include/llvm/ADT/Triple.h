@@ -172,6 +172,7 @@ public:
     Fuchsia,
     IOS,
     KFreeBSD,
+    Lemon,
     Linux,
     Lv2,        // PS3
     MacOSX,

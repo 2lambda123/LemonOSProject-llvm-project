@@ -89,6 +89,7 @@ Expected<unsigned> Process::getPageSize() {
 }
 
 size_t Process::GetMallocUsage() {
+#ifndef __lemon__
 #if defined(HAVE_MALLINFO2)
   struct mallinfo2 mi;
   mi = ::mallinfo2();
@@ -115,6 +116,10 @@ size_t Process::GetMallocUsage() {
   if (EndOfMemory != ((char*)-1) && StartOfMemory != ((char*)-1))
     return EndOfMemory - StartOfMemory;
   return 0;
+#else
+#warning Cannot get malloc info on this platform
+  return 0;
+#endif
 #else
 #warning Cannot get malloc info on this platform
   return 0;

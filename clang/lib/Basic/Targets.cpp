@@ -500,6 +500,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
         return new AndroidX86_32TargetInfo(Triple, Opts);
       }
     }
+    case llvm::Triple::Lemon:
+      return new LemonTargetInfo<X86_32TargetInfo>(Triple, Opts);
     case llvm::Triple::DragonFly:
       return new DragonFlyBSDTargetInfo<X86_32TargetInfo>(Triple, Opts);
     case llvm::Triple::NetBSD:
@@ -559,6 +561,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
         return new AndroidX86_64TargetInfo(Triple, Opts);
       }
     }
+    case llvm::Triple::Lemon:
+      return new LemonTargetInfo<X86_64TargetInfo>(Triple, Opts);
     case llvm::Triple::DragonFly:
       return new DragonFlyBSDTargetInfo<X86_64TargetInfo>(Triple, Opts);
     case llvm::Triple::NetBSD:
