@@ -16,6 +16,7 @@ using namespace llvm::opt;
 
 Lemon::Lemon(const Driver &D, const llvm::Triple &Triple, const llvm::opt::ArgList &Args)
     : Generic_ELF(D, Triple, Args){
+    getFilePaths().push_back(getRuntimePath());
     getFilePaths().push_back(getDriver().SysRoot + "/system/lib");
 }
 
